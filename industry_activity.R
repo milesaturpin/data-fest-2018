@@ -6,7 +6,7 @@ library(sigmoid)
 library(car)
 library(ggpubr)
 
-datafest <- read_csv("data/datafest2018.csv")
+datafest <- read_csv("data/datafest2018.csv", n_max = 100000)
 uscities <- read_csv("data/uscities.csv")
 
 # SKETCH
@@ -106,7 +106,9 @@ csa_combined <- msa %>%
   inner_join(csa, by = "msa") %>%
   select(csa, county_name, state_id, msa) %>% 
   inner_join(uscities, by = c("county_name", "state_id")) %>% 
-  inner_join(jobs_indust_count, by = c("city", "state_id" = "stateProvince")) 
+  inner_join(jobs_indust_count, by = c("city", "state_id" = "stateProvince")) %>%
+  filter(!is.na(population_proper)) %>% 
+  select(csa, county_name, state_id, msa, city, population_proper, industry, n, total_jobs)
 
 # extract city from csa name
 csa_combined$csa_city <- csa_combined$csa %>% 
@@ -132,6 +134,11 @@ csa_combined <- csa_combined %>%
   mutate(csa_city = case_when(csa_city == "San Jose" ~ "San Francisco",
                               csa_city != "San Jose" ~ csa_city))
 
+# csa, csa_city, csa_state
+csa_center <- csa_combined %>% 
+  select(csa, csa_city, csa_state) %>% 
+  distinct()
+
 # get csa jobs, population
 csa_pop <- csa_combined %>% 
   select(-industry, -n) %>% 
@@ -145,12 +152,12 @@ csa_pop <- csa_combined %>%
 ### 4. Comparison to national averages
 
 # total jobs
-jobs <- csa_pop %>%
+jobs <- jobs_count_city %>%
   summarise(n = sum(total_jobs)) %>%
   pull() 
 
 # compute national industry job proportions
-natl_avg <- csa_combined %>%
+natl_avg <- jobs_indust_count %>%
   group_by(industry) %>%
   summarise(n = sum(n)) %>%
   group_by(industry) %>%
@@ -175,5 +182,9 @@ log_ratio_stats <- industry_diff_csa %>%
 industry_diff_csa <- industry_diff_csa %>% 
   mutate(log_ratio_adj = (log_ratio - log_ratio_stats[[1]]) / log_ratio_stats[[2]])
 
+# add on csa_center, rename
+industry_activity <- industry_diff_csa %>% 
+  inner_join(csa_center, by = "csa")
+
 # write .csv file
-write_csv(industry_diff_csa, "data/industry_diff_csa.csv")
+write_csv(industry_activity, "data/industry_activity.csv")
