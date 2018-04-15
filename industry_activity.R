@@ -176,4 +176,4 @@ industry_diff_csa <- industry_diff_csa %>%
   mutate(log_ratio_adj = (log_ratio - log_ratio_stats[[1]]) / log_ratio_stats[[2]])
 
 # write .csv file
-write_csv(industry_diff_csa, "industry_diff_csa.csv")
+write_csv(industry_diff_csa, "data/industry_diff_csa.csv")
