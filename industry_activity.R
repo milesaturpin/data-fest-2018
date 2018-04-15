@@ -6,7 +6,7 @@ library(sigmoid)
 library(car)
 library(ggpubr)
 
-datafest <- read_csv("data/datafest2018.csv", n_max = 100000)
+datafest <- read_csv("data/datafest2018.csv")
 uscities <- read_csv("data/uscities.csv")
 
 # SKETCH
